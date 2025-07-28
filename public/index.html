@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker - Your Complete Workout Companion</title>
+    <script src="js/tailwindcss.js"></script>
+    <script src="js/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 280px;
+            width: 100%;
+            max-width: 280px;
+        }
+        .nav-item.active {
+            background-color: #0891b2;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .task-item input:checked + label {
+            text-decoration: line-through;
+            color: #6b7280;
+        }
+        .task-item input:checked + label .task-checkbox {
+            background-color: #0891b2;
+            border-color: #0891b2;
+        }
+        .task-item input:checked + label .task-checkbox::after {
+            content: '✔';
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .accordion-content.open {
+            max-height: 1000px;
+        }
+        .calendar-day {
+            transition: all 0.2s ease;
+        }
+        .calendar-day:hover {
+            transform: scale(1.05);
+        }
+        .calendar-day.has-workout {
+            background-color: #0891b2;
+            color: white;
+        }
+        .calendar-day.completed {
+            background-color: #22c55e;
+            color: white;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal.show {
+            display: flex;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0891b2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div id="app" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Authentication Modal -->
+        <div id="auth-modal" class="modal">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-cyan-700" id="auth-title">Login</h2>
+                    <button id="close-auth-button" class="text-3xl font-light text-slate-500 hover:text-slate-800">&times;</button>
+                </div>
+                <div id="auth-content">
+                    <!-- Login Form -->
+                    <form id="login-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                            <input type="text" id="login-username" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                            <input type="password" id="login-password" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+                        </div>
+                        <button type="submit" class="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-colors">
+                            <span id="login-loading" class="loading hidden"></span>
+                            <span id="login-text">Login</span>
+                        </button>
+                    </form>
+                    
+                    <!-- Register Form -->
+                    <form id="register-form" class="space-y-4 hidden">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                            <input type="text" id="register-username" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                            <input type="email" id="register-email" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                            <input type="password" id="register-password" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+                        </div>
+                        <button type="submit" class="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-colors">
+                            <span id="register-loading" class="loading hidden"></span>
+                            <span id="register-text">Register</span>
+                        </button>
+                    </form>
+                    
+                    <div class="mt-4 text-center">
+                        <button id="toggle-auth-form" class="text-cyan-600 hover:text-cyan-700 text-sm">
+                            Don't have an account? Register
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App Content -->
+        <div id="main-content" class="hidden">
+            <header class="text-center mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-4xl font-bold text-cyan-700">Your Fitness Journey</h1>
+                    <div class="flex items-center space-x-4">
+                        <span id="user-info" class="text-slate-600"></span>
+                        <button id="logout-button" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">Logout</button>
+                    </div>
+                </div>
+                <p class="text-lg text-slate-600">Track your progress, stay motivated, achieve your goals!</p>
+            </header>
+
+            <!-- Navigation Tabs -->
+            <div class="flex justify-center mb-8">
+                <div class="bg-white rounded-lg p-1 shadow-lg">
+                    <button class="tab-button active px-6 py-3 rounded-md transition-colors" data-tab="workouts">Workouts</button>
+                    <button class="tab-button px-6 py-3 rounded-md transition-colors" data-tab="calendar">Calendar</button>
+                    <button class="tab-button px-6 py-3 rounded-md transition-colors" data-tab="progress">Progress</button>
+                    <button class="tab-button px-6 py-3 rounded-md transition-colors" data-tab="guide">Guide</button>
+                </div>
+            </div>
+
+            <!-- Workouts Tab -->
+            <div id="workouts-tab" class="tab-content">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1">
+                        <div class="bg-white p-6 rounded-2xl shadow-lg sticky top-8">
+                            <h2 class="text-2xl font-bold mb-4 text-center">Weekly Plan</h2>
+                            <div class="chart-container mb-6">
+                                <canvas id="weeklySplitChart"></canvas>
+                            </div>
+                            <nav id="day-navigation" class="flex flex-col space-y-2">
+                            </nav>
+                            <div class="mt-6 p-4 bg-slate-100 rounded-lg">
+                                <h3 class="font-semibold text-slate-700 mb-2">Weekly Progress</h3>
+                                <div id="weekly-progress" class="text-center">
+                                    <div class="text-2xl font-bold text-cyan-600">0%</div>
+                                    <div class="text-sm text-slate-500">0 of 0 workouts completed</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="workout-display" class="lg:col-span-2">
+                        <div class="bg-white p-8 rounded-2xl shadow-lg text-center">
+                            <h2 class="text-2xl font-bold text-slate-700 mb-4">Welcome to Your Fitness Journey!</h2>
+                            <p class="text-slate-600 mb-6">Select a day from the sidebar to view your workout plan.</p>
+                            <div class="loading mx-auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Tab -->
+            <div id="calendar-tab" class="tab-content hidden">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-cyan-700">Workout Calendar</h2>
+                        <div class="flex items-center space-x-4">
+                            <button id="prev-month" class="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 transition-colors">‹</button>
+                            <span id="current-month" class="text-lg font-semibold"></span>
+                            <button id="next-month" class="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 transition-colors">›</button>
+                        </div>
+                    </div>
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                        <!-- Calendar will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Tab -->
+            <div id="progress-tab" class="tab-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h2 class="text-2xl font-bold text-cyan-700 mb-4">Streak Stats</h2>
+                        <div id="streak-stats" class="space-y-4">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-cyan-600">0</div>
+                                <div class="text-sm text-slate-500">Current Streak</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-green-600">0</div>
+                                <div class="text-sm text-slate-500">Longest Streak</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h2 class="text-2xl font-bold text-cyan-700 mb-4">Monthly Stats</h2>
+                        <div id="monthly-stats" class="space-y-4">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-cyan-600">0</div>
+                                <div class="text-sm text-slate-500">Workouts This Month</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-green-600">0%</div>
+                                <div class="text-sm text-slate-500">Completion Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guide Tab -->
+            <div id="guide-tab" class="tab-content hidden">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-cyan-700 mb-6">Your Guide to Success</h2>
+                    <div id="guide-content" class="space-y-4">
+                        <!-- Guide content will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="flex items-center justify-center min-h-screen">
+            <div class="text-center">
+                <div class="loading mx-auto mb-4"></div>
+                <p class="text-slate-600">Loading your fitness journey...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html> 
