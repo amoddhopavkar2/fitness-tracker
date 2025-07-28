@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Workout Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Serene Fitness -->
+    <!-- Application Structure Plan: The application is designed as a single-page dashboard with tab-based navigation for each day of the week. This structure was chosen to break down the dense weekly plan into manageable, daily chunks, which is ideal for a beginner who might feel overwhelmed by a long document. The main view always shows a single day's plan, promoting focus. Key interactions include checking off exercises to track progress via a dynamic progress bar, providing immediate positive feedback. An 'Overview & Guide' section is included to keep essential beginner advice easily accessible without cluttering the daily workout view. This user flow—select a day, see the plan, track progress—is simple, intuitive, and motivating. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Weekly schedule (3x Strength, 2x Cardio, 2x Rest). Goal: Inform/Organize. Viz/Method: Donut Chart (Chart.js). Interaction: None (static view). Justification: Provides a quick, high-level visual summary of the weekly commitment, making the plan's structure easy to grasp.
+        - Report Info: Daily exercise lists. Goal: Organize/Track. Viz/Method: Interactive Checklist (HTML/CSS/JS). Interaction: Users can check/uncheck items. Justification: This is the core interactive element. It transforms a static list into a dynamic to-do list, which is highly engaging and helps the user track their accomplishments in real-time.
+        - Report Info: Daily progress. Goal: Change/Motivate. Viz/Method: Dynamic Progress Bar (HTML/CSS/JS). Interaction: Updates automatically when checkboxes are clicked. Justification: Offers immediate visual feedback on progress, which is a powerful motivator for completing the workout.
+        - Report Info: Important beginner notes. Goal: Inform. Viz/Method: Accordion/Collapsible Sections (HTML/JS). Interaction: Click to expand/collapse. Justification: Keeps crucial but lengthy information neatly organized and accessible without overwhelming the main interface.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 280px;
+            width: 100%;
+            max-width: 280px;
+        }
+        .nav-item.active {
+            background-color: #0891b2;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .task-item input:checked + label {
+            text-decoration: line-through;
+            color: #6b7280;
+        }
+        .task-item input:checked + label .task-checkbox {
+            background-color: #0891b2;
+            border-color: #0891b2;
+        }
+        .task-item input:checked + label .task-checkbox::after {
+            content: '✔';
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .accordion-content.open {
+            max-height: 1000px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div id="app" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-cyan-700">Your Weekly Fitness Journey</h1>
+            <p class="mt-2 text-lg text-slate-600">From 95kg to a Fitter, Stronger You. Let's Get Started!</p>
+        </header>
+
+        <main>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1">
+                    <div class="bg-white p-6 rounded-2xl shadow-lg sticky top-8">
+                        <h2 class="text-2xl font-bold mb-4 text-center">Weekly Plan</h2>
+                        <div class="chart-container mb-6">
+                            <canvas id="weeklySplitChart"></canvas>
+                        </div>
+                        <nav id="day-navigation" class="flex flex-col space-y-2">
+                        </nav>
+                         <button id="guide-button" class="mt-6 w-full text-left p-4 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors duration-200">
+                            <h3 class="text-lg font-semibold text-slate-700">📋 Beginner's Guide</h3>
+                            <p class="text-sm text-slate-500">Essential tips for your journey. Click to view.</p>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="workout-display" class="lg:col-span-2">
+                </div>
+            </div>
+        </main>
+        
+        <div id="guide-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-cyan-700">Your Guide to Success</h2>
+                    <button id="close-guide-button" class="text-3xl font-light text-slate-500 hover:text-slate-800">&times;</button>
+                </div>
+                <div id="guide-content" class="space-y-4">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const workoutData = {
+            day1: {
+                title: "Full Body Strength A",
+                focus: "Strength Training",
+                warmup: [
+                    "5 minutes of light cardio (jogging, cycling)",
+                    "Arm circles (10 forward, 10 backward)",
+                    "Leg swings (10 per leg, each direction)",
+                    "Torso twists (10 per side)",
+                    "Bodyweight squats (15 reps)"
+                ],
+                workout: [
+                    "Goblet Squats: 3 sets of 8-12 reps",
+                    "Dumbbell Bench Press: 3 sets of 8-12 reps",
+                    "Dumbbell Rows: 3 sets of 8-12 reps per arm",
+                    "Overhead Press (Dumbbell): 3 sets of 8-12 reps",
+                    "Lunges: 3 sets of 10-12 reps per leg",
+                    "Plank: 3 sets, hold for 30-60 seconds"
+                ],
+                cooldown: [
+                    "Quad stretch (30s per leg)",
+                    "Hamstring stretch (30s per leg)",
+                    "Chest stretch (30s)",
+                    "Back stretch (Cat-Cow) (30s)",
+                    "Triceps stretch (30s per arm)"
+                ]
+            },
+            day2: {
+                title: "Cardio & Core",
+                focus: "Cardiovascular Health & Core Strength",
+                warmup: ["5 minutes of brisk walking or light jogging."],
+                workout: [
+                    "Steady-State Cardio (20-30 mins on treadmill, bike, or elliptical)",
+                    "Crunches: 3 sets of 15-20 reps",
+                    "Bird-Dog: 3 sets of 10 reps per side",
+                    "Glute Bridges: 3 sets of 15-20 reps"
+                ],
+                cooldown: [
+                    "Slow walking (3 mins)",
+                    "Cobra stretch (30s)",
+                    "Child's pose (60s)"
+                ]
+            },
+            day3: {
+                title: "Full Body Strength B",
+                focus: "Strength Training",
+                warmup: [
+                    "5 minutes of light cardio (jogging, cycling)",
+                    "Arm circles (10 forward, 10 backward)",
+                    "Leg swings (10 per leg, each direction)",
+                    "Torso twists (10 per side)",
+                    "Bodyweight squats (15 reps)"
+                ],
+                workout: [
+                    "Romanian Deadlifts (Dumbbell): 3 sets of 10-15 reps",
+                    "Push-Ups (on knees if needed): 3 sets to failure",
+                    "Lat Pulldowns or Dumbbell Pullovers: 3 sets of 8-12 reps",
+                    "Dumbbell Bicep Curls: 3 sets of 10-15 reps per arm",
+                    "Tricep Dips (using a bench): 3 sets to failure",
+                    "Leg Raises: 3 sets of 15-20 reps"
+                ],
+                cooldown: [
+                    "Quad stretch (30s per leg)",
+                    "Hamstring stretch (30s per leg)",
+                    "Chest stretch (30s)",
+                    "Back stretch (Cat-Cow) (30s)",
+                    "Triceps stretch (30s per arm)"
+                ]
+            },
+            day4: {
+                title: "Active Recovery",
+                focus: "Rest & Mobility",
+                warmup: [],
+                workout: [
+                    "Go for a 20-30 minute walk",
+                    "Do some light stretching or foam rolling",
+                    "Consider gentle yoga or mobility work"
+                ],
+                cooldown: []
+            },
+            day5: {
+                title: "Full Body Strength A",
+                focus: "Strength Training",
+                warmup: [
+                    "5 minutes of light cardio (jogging, cycling)",
+                    "Arm circles (10 forward, 10 backward)",
+                    "Leg swings (10 per leg, each direction)",
+                    "Torso twists (10 per side)",
+                    "Bodyweight squats (15 reps)"
+                ],
+                workout: [
+                    "Goblet Squats: 3 sets of 8-12 reps",
+                    "Dumbbell Bench Press: 3 sets of 8-12 reps",
+                    "Dumbbell Rows: 3 sets of 8-12 reps per arm",
+                    "Overhead Press (Dumbbell): 3 sets of 8-12 reps",
+                    "Lunges: 3 sets of 10-12 reps per leg",
+                    "Plank: 3 sets, hold for 30-60 seconds"
+                ],
+                cooldown: [
+                    "Quad stretch (30s per leg)",
+                    "Hamstring stretch (30s per leg)",
+                    "Chest stretch (30s)",
+                    "Back stretch (Cat-Cow) (30s)",
+                    "Triceps stretch (30s per arm)"
+                ]
+            },
+            day6: {
+                title: "Cardio & Core",
+                focus: "Cardiovascular Health & Core Strength",
+                warmup: ["5 minutes of brisk walking or light jogging."],
+                workout: [
+                    "Steady-State Cardio (20-30 mins on treadmill, bike, or elliptical)",
+                    "Crunches: 3 sets of 15-20 reps",
+                    "Bird-Dog: 3 sets of 10 reps per side",
+                    "Glute Bridges: 3 sets of 15-20 reps"
+                ],
+                cooldown: [
+                    "Slow walking (3 mins)",
+                    "Cobra stretch (30s)",
+                    "Child's pose (60s)"
+                ]
+            },
+            day7: {
+                title: "Rest Day",
+                focus: "Full Recovery",
+                warmup: [],
+                workout: [
+                    "Complete rest is essential for muscle repair and growth.",
+                    "Ensure you get quality sleep.",
+                    "Focus on good nutrition and hydration."
+                ],
+                cooldown: []
+            }
+        };
+
+        const guideData = [
+            { title: "Listen to Your Body", content: "It's normal to feel some muscle soreness (DOMS) 24-48 hours after a workout. However, if you feel sharp pain, stop immediately. Rest is productive." },
+            { title: "Warm-Up & Cool-Down", content: "Never skip these. A good warm-up prepares your body for exercise, reducing injury risk. A cool-down helps your body recover and improves flexibility." },
+            { title: "Form Over Weight", content: "Focus on performing each exercise with the correct technique. It's better to use lighter weights with good form than heavy weights with poor form. Watch videos of the exercises if you're unsure." },
+            { title: "Progressive Overload", content: "To keep making progress, you need to challenge your muscles. Gradually increase the weight, the number of reps/sets, or reduce rest time over the weeks." },
+            { title: "Nutrition is Crucial", content: "This plan is for your workouts, but weight loss is significantly impacted by your diet. Focus on whole foods, lean protein, fruits, and vegetables. A calorie deficit is necessary for weight loss." },
+            { title: "Hydration is Key", content: "Drink plenty of water throughout the day, especially before, during, and after your workouts. It's vital for performance and recovery." },
+            { title: "Rest is Mandatory", content: "Your muscles grow and repair when you rest, not when you work out. Ensure you get 7-9 hours of sleep per night and take your rest days seriously." }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dayNavigation = document.getElementById('day-navigation');
+            const workoutDisplay = document.getElementById('workout-display');
+            const guideButton = document.getElementById('guide-button');
+            const guideModal = document.getElementById('guide-modal');
+            const closeGuideButton = document.getElementById('close-guide-button');
+            const guideContent = document.getElementById('guide-content');
+
+            const days = Object.keys(workoutData);
+
+            days.forEach((day, index) => {
+                const dayData = workoutData[day];
+                const navButton = document.createElement('button');
+                navButton.className = 'nav-item w-full text-left p-4 rounded-lg hover:bg-cyan-600 hover:text-white transition-colors duration-200';
+                navButton.dataset.day = day;
+                navButton.innerHTML = `
+                    <p class="font-semibold">Day ${index + 1}: ${dayData.title}</p>
+                    <p class="text-sm opacity-80">${dayData.focus}</p>
+                `;
+                dayNavigation.appendChild(navButton);
+            });
+            
+            guideData.forEach(item => {
+                const accordionItem = document.createElement('div');
+                accordionItem.className = 'border border-slate-200 rounded-lg';
+                
+                const button = document.createElement('button');
+                button.className = 'w-full p-4 text-left font-semibold flex justify-between items-center';
+                button.innerHTML = `<span>${item.title}</span><span class="transform transition-transform duration-300">▼</span>`;
+
+                const content = document.createElement('div');
+                content.className = 'accordion-content px-4 pb-4 text-slate-600';
+                content.innerHTML = `<p>${item.content}</p>`;
+
+                button.addEventListener('click', () => {
+                    const icon = button.querySelector('span:last-child');
+                    content.classList.toggle('open');
+                    icon.classList.toggle('rotate-180');
+                });
+                
+                accordionItem.appendChild(button);
+                accordionItem.appendChild(content);
+                guideContent.appendChild(accordionItem);
+            });
+
+            const renderWorkout = (day) => {
+                const data = workoutData[day];
+                if (!data) return;
+                
+                const totalTasks = data.warmup.length + data.workout.length + data.cooldown.length;
+
+                const createTaskHtml = (tasks, category) => {
+                    if (tasks.length === 0) return '';
+                    return `
+                        <div class="mb-6">
+                            <h3 class="text-xl font-semibold mb-3 text-cyan-700 border-b-2 border-cyan-100 pb-2">${category}</h3>
+                            <div class="space-y-3">
+                                ${tasks.map((task, index) => `
+                                    <div class="task-item">
+                                        <input type="checkbox" id="${day}-${category}-${index}" class="hidden">
+                                        <label for="${day}-${category}-${index}" class="flex items-center cursor-pointer group">
+                                            <span class="task-checkbox w-6 h-6 border-2 border-slate-300 rounded-md mr-4 flex-shrink-0 relative group-hover:border-cyan-500 transition-colors"></span>
+                                            <span class="text-slate-700">${task}</span>
+                                        </label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                };
+
+                workoutDisplay.innerHTML = `
+                    <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                        <h2 class="text-3xl font-bold mb-2">${data.title}</h2>
+                        <p class="text-md text-slate-500 mb-6">${data.focus}</p>
+                        
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-1 text-sm">
+                                <span>Progress</span>
+                                <span id="${day}-progress-text">0 / ${totalTasks}</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5">
+                                <div id="${day}-progress-bar" class="bg-cyan-600 h-2.5 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        ${createTaskHtml(data.warmup, 'Warm-Up')}
+                        ${createTaskHtml(data.workout, 'Workout')}
+                        ${createTaskHtml(data.cooldown, 'Cool-Down')}
+                    </div>
+                `;
+                
+                updateProgress(day);
+
+                workoutDisplay.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', () => updateProgress(day));
+                });
+            };
+
+            const updateProgress = (day) => {
+                const container = document.getElementById('workout-display');
+                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                const checked = container.querySelectorAll('input[type="checkbox"]:checked');
+                const total = checkboxes.length;
+                const completed = checked.length;
+                
+                const progress = total > 0 ? (completed / total) * 100 : 0;
+                
+                const progressBar = document.getElementById(`${day}-progress-bar`);
+                const progressText = document.getElementById(`${day}-progress-text`);
+
+                if(progressBar && progressText) {
+                    progressBar.style.width = `${progress}%`;
+                    progressText.textContent = `${completed} / ${total}`;
+                }
+            };
+
+            dayNavigation.addEventListener('click', (e) => {
+                const navButton = e.target.closest('.nav-item');
+                if (navButton) {
+                    const day = navButton.dataset.day;
+                    
+                    document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+                    navButton.classList.add('active');
+
+                    renderWorkout(day);
+                }
+            });
+
+            guideButton.addEventListener('click', () => guideModal.classList.remove('hidden'));
+            closeGuideButton.addEventListener('click', () => guideModal.classList.add('hidden'));
+            guideModal.addEventListener('click', (e) => {
+                if(e.target === guideModal) {
+                    guideModal.classList.add('hidden');
+                }
+            });
+
+            const today = new Date().getDay();
+            const currentDayKey = days[(today + 6) % 7];
+            document.querySelector(`.nav-item[data-day="${currentDayKey}"]`).click();
+
+            const ctx = document.getElementById('weeklySplitChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Strength', 'Cardio & Core', 'Recovery & Rest'],
+                    datasets: [{
+                        label: 'Weekly Focus',
+                        data: [3, 2, 2],
+                        backgroundColor: [
+                            'rgb(8, 145, 178)',
+                            'rgb(22, 163, 74)',
+                            'rgb(245, 158, 11)'
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 4,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    family: 'Inter',
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            bodyFont: {
+                                family: 'Inter'
+                            },
+                            titleFont: {
+                                family: 'Inter'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
