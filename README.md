@@ -59,7 +59,7 @@ npm install
 Create a `.env` file in the root directory:
 ```env
 NODE_ENV=development
-PORT=5000
+PORT=3001
 JWT_SECRET=your-secret-key-change-in-production
 ```
 
@@ -81,7 +81,35 @@ npm run dev
 npm start
 ```
 
-The application will be available at `http://localhost:5000`
+The application will be available at `http://localhost:3001`
+
+---
+
+## ⚡️ Frontend & Static Files
+- All static files (HTML, JS, CSS) are served from the `/public` directory.
+- **TailwindCSS** and **Chart.js** are loaded locally from `/public/js/` (not from a CDN) to avoid CSP issues.
+- If you add new frontend libraries, place them in `/public/js/` and reference them with a relative path in your HTML.
+
+---
+
+## 🛡️ Content Security Policy (CSP) & Local JS
+If you see browser errors about CSP or MIME type for JS libraries:
+- Make sure the JS files exist in `/public/js/`.
+- Reference them as `<script src="js/filename.js"></script>` in your HTML.
+- Do **not** use CDN links for JS libraries unless you update your CSP accordingly.
+
+---
+
+## 📦 .gitignore
+A `.gitignore` file is included and covers:
+- `node_modules/`
+- SQLite databases (e.g. `fitness_tracker.db`)
+- log files
+- environment files (`.env`)
+- coverage reports
+- OS-generated files (e.g. `.DS_Store`)
+
+---
 
 ## 🧪 Testing
 
