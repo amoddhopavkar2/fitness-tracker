@@ -1,8 +1,17 @@
 const express = require('express');
+const { validateEnvironment, config } = require('./src/config/env');
 const app = require('./src/app');
 const path = require('path');
 
-const PORT = process.env.PORT || 3001;
+// Validate environment variables on startup
+try {
+  validateEnvironment();
+} catch (error) {
+  console.error('❌ Environment validation failed:', error.message);
+  process.exit(1);
+}
+
+const PORT = config.port;
 
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -17,4 +26,6 @@ app.listen(PORT, () => {
   console.log(`📊 API available at http://localhost:${PORT}/api`);
   console.log(`🌐 Frontend available at http://localhost:${PORT}`);
   console.log(`🧪 Test coverage available at http://localhost:${PORT}/coverage`);
+  console.log(`🔧 Environment: ${config.nodeEnv}`);
+  console.log(`🔐 JWT Secret configured: ${config.jwtSecret ? 'Yes' : 'No'}`);
 }); 

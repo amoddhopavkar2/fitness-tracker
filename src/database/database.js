@@ -1,8 +1,11 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const { config } = require('../config/env');
 
-// Create database file in the project root
-const dbPath = path.join(__dirname, '../../fitness_tracker.db');
+// Create database file using environment configuration
+const dbPath = path.isAbsolute(config.dbPath) 
+  ? config.dbPath 
+  : path.join(__dirname, '../../', config.dbPath);
 
 // Create a new database connection
 const db = new sqlite3.Database(dbPath, (err) => {

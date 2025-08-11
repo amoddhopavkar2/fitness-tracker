@@ -1,12 +1,13 @@
 const bcrypt = require('bcryptjs');
 const db = require('../database/database');
+const { config } = require('../config/env');
 
 class User {
   static async create(userData) {
     const { username, email, password } = userData;
     
     // Hash the password
-    const saltRounds = 10;
+    const saltRounds = config.bcryptRounds;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     
     return new Promise((resolve, reject) => {
@@ -72,7 +73,7 @@ class User {
     const values = Object.values(updateData);
     
     if (updateData.password) {
-      const saltRounds = 10;
+      const saltRounds = config.bcryptRounds;
       const hashedPassword = await bcrypt.hash(updateData.password, saltRounds);
       const passwordIndex = fields.indexOf('password');
       values[passwordIndex] = hashedPassword;

@@ -161,33 +161,78 @@ router.get('/streak', async (req, res) => {
     let currentStreak = 0;
     let longestStreak = 0;
     let tempStreak = 0;
+    let lastWorkoutDate = null;
     
-    // Check current streak (consecutive days with completed exercises)
-    for (let day = moment(today); day.isSameOrAfter(moment().subtract(30, 'days')); day.subtract(1, 'day')) {
+    // Get all workout completion data for the last 90 days to calculate accurate streaks
+    const startDate = moment().subtract(90, 'days');
+    const workoutData = [];
+    
+    // Collect all daily progress data
+    for (let day = moment(startDate); day.isSameOrBefore(today); day.add(1, 'day')) {
       const dateStr = day.format('YYYY-MM-DD');
       const progress = await Exercise.getDailyProgress(req.user.id, dateStr);
       
-      if (progress.completed > 0) {
-        currentStreak++;
+      workoutData.push({
+        date: dateStr,
+        hasWorkout: progress.completed > 0,
+        completionRate: progress.percentage
+      });
+    }
+    
+    // Calculate current streak (working backwards from today)
+    let streakBroken = false;
+    for (let i = workoutData.length - 1; i >= 0; i--) {
+      const dayData = workoutData[i];
+      
+      if (dayData.hasWorkout) {
+        if (!streakBroken) {
+          currentStreak++;
+          if (!lastWorkoutDate) {
+            lastWorkoutDate = dayData.date;
+          }
+        }
         tempStreak++;
       } else {
+        // If this is today or yesterday and we haven't found any workouts yet, 
+        // we might still be in a streak (grace period for today)
+        const dayMoment = moment(dayData.date);
+        const isToday = dayMoment.isSame(today, 'day');
+        const isYesterday = dayMoment.isSame(moment().subtract(1, 'day'), 'day');
+        
+        if (currentStreak === 0 && (isToday || (isYesterday && !streakBroken))) {
+          // Continue looking for streak, but mark that we've seen a gap
+          if (isYesterday) streakBroken = true;
+          continue;
+        }
+        
+        // Update longest streak if current temp streak is longer
         if (tempStreak > longestStreak) {
           longestStreak = tempStreak;
         }
+        
+        // Reset temp streak and break current streak calculation
         tempStreak = 0;
-        break; // Stop counting current streak if we find a day with no completed exercises
+        if (currentStreak > 0) {
+          break; // We've found the end of the current streak
+        }
       }
     }
     
-    // Update longest streak if current streak is longer
+    // Final check: update longest streak if current streak is the longest
     if (currentStreak > longestStreak) {
       longestStreak = currentStreak;
+    }
+    
+    // If we have a temp streak that's longer than longest, update it
+    if (tempStreak > longestStreak) {
+      longestStreak = tempStreak;
     }
 
     res.json({
       currentStreak,
       longestStreak,
-      lastWorkoutDate: currentStreak > 0 ? moment().subtract(currentStreak - 1, 'days').format('YYYY-MM-DD') : null
+      lastWorkoutDate,
+      streakStartDate: currentStreak > 0 ? moment(lastWorkoutDate).subtract(currentStreak - 1, 'days').format('YYYY-MM-DD') : null
     });
   } catch (error) {
     console.error('Get streak error:', error);
@@ -201,36 +246,77 @@ router.get('/streak', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const today = moment();
+    
+    // Calculate current month statistics
+    const startOfMonth = moment().startOf('month');
+    const endOfMonth = moment().endOf('month');
+    
+    let monthlyTotalWorkouts = 0;
+    let monthlyTotalExercises = 0;
+    let monthlyCompletedExercises = 0;
+    let monthlyWorkoutDays = 0;
+    
+    // Calculate last 30 days statistics for comparison
     const thirtyDaysAgo = moment().subtract(30, 'days');
+    let last30TotalWorkouts = 0;
+    let last30TotalExercises = 0;
+    let last30CompletedExercises = 0;
+    let last30WorkoutDays = 0;
     
-    let totalWorkouts = 0;
-    let totalExercises = 0;
-    let completedExercises = 0;
-    let workoutDays = 0;
+    // Get current month data
+    for (let day = moment(startOfMonth); day.isSameOrBefore(endOfMonth) && day.isSameOrBefore(today); day.add(1, 'day')) {
+      const dateStr = day.format('YYYY-MM-DD');
+      const progress = await Exercise.getDailyProgress(req.user.id, dateStr);
+      
+      if (progress.completed > 0) {
+        monthlyWorkoutDays++;
+        monthlyTotalWorkouts++;
+        monthlyTotalExercises += progress.total;
+        monthlyCompletedExercises += progress.completed;
+      }
+    }
     
+    // Get last 30 days data
     for (let day = moment(thirtyDaysAgo); day.isSameOrBefore(today); day.add(1, 'day')) {
       const dateStr = day.format('YYYY-MM-DD');
       const progress = await Exercise.getDailyProgress(req.user.id, dateStr);
       
-      if (progress.total > 0) {
-        workoutDays++;
-        totalWorkouts++;
-        totalExercises += progress.total;
-        completedExercises += progress.completed;
+      if (progress.completed > 0) {
+        last30WorkoutDays++;
+        last30TotalWorkouts++;
+        last30TotalExercises += progress.total;
+        last30CompletedExercises += progress.completed;
       }
     }
     
-    const averageCompletionRate = totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0;
-    const averageWorkoutsPerWeek = workoutDays > 0 ? (workoutDays / 4.285) : 0; // 30 days / 7 days per week
+    // Calculate rates and averages
+    const monthlyCompletionRate = monthlyTotalExercises > 0 ? (monthlyCompletedExercises / monthlyTotalExercises) * 100 : 0;
+    const last30CompletionRate = last30TotalExercises > 0 ? (last30CompletedExercises / last30TotalExercises) * 100 : 0;
+    
+    const daysInMonth = endOfMonth.date();
+    const daysSoFarInMonth = today.date();
+    const monthlyWorkoutsPerWeek = monthlyWorkoutDays > 0 ? (monthlyWorkoutDays / (daysSoFarInMonth / 7)) : 0;
+    const last30WorkoutsPerWeek = last30WorkoutDays > 0 ? (last30WorkoutDays / 4.285) : 0; // 30 days / 7 days per week
     
     res.json({
+      currentMonth: {
+        totalWorkouts: monthlyTotalWorkouts,
+        totalExercises: monthlyTotalExercises,
+        completedExercises: monthlyCompletedExercises,
+        workoutDays: monthlyWorkoutDays,
+        averageCompletionRate: Math.round(monthlyCompletionRate * 100) / 100,
+        averageWorkoutsPerWeek: Math.round(monthlyWorkoutsPerWeek * 100) / 100,
+        daysInMonth,
+        daysSoFar: daysSoFarInMonth,
+        monthName: today.format('MMMM YYYY')
+      },
       last30Days: {
-        totalWorkouts,
-        totalExercises,
-        completedExercises,
-        workoutDays,
-        averageCompletionRate: Math.round(averageCompletionRate * 100) / 100,
-        averageWorkoutsPerWeek: Math.round(averageWorkoutsPerWeek * 100) / 100
+        totalWorkouts: last30TotalWorkouts,
+        totalExercises: last30TotalExercises,
+        completedExercises: last30CompletedExercises,
+        workoutDays: last30WorkoutDays,
+        averageCompletionRate: Math.round(last30CompletionRate * 100) / 100,
+        averageWorkoutsPerWeek: Math.round(last30WorkoutsPerWeek * 100) / 100
       }
     });
   } catch (error) {

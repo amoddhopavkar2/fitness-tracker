@@ -105,8 +105,9 @@
     </div>
 
     <script>
+        // Map workouts to weekdays
         const workoutData = {
-            day1: {
+            mon: {
                 title: "Full Body Strength A",
                 focus: "Strength Training",
                 warmup: [
@@ -132,7 +133,7 @@
                     "Triceps stretch (30s per arm)"
                 ]
             },
-            day2: {
+            tue: {
                 title: "Cardio & Core",
                 focus: "Cardiovascular Health & Core Strength",
                 warmup: ["5 minutes of brisk walking or light jogging."],
@@ -148,7 +149,7 @@
                     "Child's pose (60s)"
                 ]
             },
-            day3: {
+            wed: {
                 title: "Full Body Strength B",
                 focus: "Strength Training",
                 warmup: [
@@ -174,7 +175,7 @@
                     "Triceps stretch (30s per arm)"
                 ]
             },
-            day4: {
+            thu: {
                 title: "Active Recovery",
                 focus: "Rest & Mobility",
                 warmup: [],
@@ -185,7 +186,7 @@
                 ],
                 cooldown: []
             },
-            day5: {
+            fri: {
                 title: "Full Body Strength A",
                 focus: "Strength Training",
                 warmup: [
@@ -211,7 +212,7 @@
                     "Triceps stretch (30s per arm)"
                 ]
             },
-            day6: {
+            sat: {
                 title: "Cardio & Core",
                 focus: "Cardiovascular Health & Core Strength",
                 warmup: ["5 minutes of brisk walking or light jogging."],
@@ -227,7 +228,7 @@
                     "Child's pose (60s)"
                 ]
             },
-            day7: {
+            sun: {
                 title: "Rest Day",
                 focus: "Full Recovery",
                 warmup: [],
@@ -258,15 +259,17 @@
             const closeGuideButton = document.getElementById('close-guide-button');
             const guideContent = document.getElementById('guide-content');
 
-            const days = Object.keys(workoutData);
+            // Render navigation for Mon-Sun
+            const weekdayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+            const weekdayKeys = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
-            days.forEach((day, index) => {
-                const dayData = workoutData[day];
+            weekdayKeys.forEach((key, index) => {
+                const dayData = workoutData[key];
                 const navButton = document.createElement('button');
                 navButton.className = 'nav-item w-full text-left p-4 rounded-lg hover:bg-cyan-600 hover:text-white transition-colors duration-200';
-                navButton.dataset.day = day;
+                navButton.dataset.day = key;
                 navButton.innerHTML = `
-                    <p class="font-semibold">Day ${index + 1}: ${dayData.title}</p>
+                    <p class="font-semibold">${weekdayNames[index]}: ${dayData.title}</p>
                     <p class="text-sm opacity-80">${dayData.focus}</p>
                 `;
                 dayNavigation.appendChild(navButton);
@@ -387,8 +390,11 @@
                 }
             });
 
+            // Set default selected day to today (Mon=0, Sun=6)
             const today = new Date().getDay();
-            const currentDayKey = days[(today + 6) % 7];
+            // JS: 0=Sun, 1=Mon, ..., 6=Sat. We want Mon=0, ..., Sun=6
+            const weekdayIndex = today === 0 ? 6 : today - 1;
+            const currentDayKey = weekdayKeys[weekdayIndex];
             document.querySelector(`.nav-item[data-day="${currentDayKey}"]`).click();
 
             const ctx = document.getElementById('weeklySplitChart').getContext('2d');

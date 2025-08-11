@@ -56,12 +56,12 @@ npm install
 ```
 
 ### 3. Set Up Environment Variables
-Create a `.env` file in the root directory:
-```env
-NODE_ENV=development
-PORT=3001
-JWT_SECRET=your-secret-key-change-in-production
+Copy the example environment file and configure it:
+```bash
+cp .env.example .env
 ```
+
+Edit the `.env` file with your specific configuration. See [Environment Configuration](docs/ENVIRONMENT.md) for detailed information about all available environment variables.
 
 ### 4. Initialize Database
 ```bash

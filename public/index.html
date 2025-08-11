@@ -20,11 +20,34 @@
             width: 100%;
             max-width: 280px;
         }
+        
+        /* Mobile responsive chart container */
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 200px;
+                max-width: 200px;
+            }
+        }
+        
         .nav-item.active {
             background-color: #0891b2;
             color: #ffffff;
             font-weight: 600;
         }
+        
+        /* Enhanced mobile touch targets */
+        .nav-item {
+            min-height: 60px;
+            touch-action: manipulation;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-item {
+                min-height: 70px;
+                padding: 16px !important;
+            }
+        }
+        
         .task-item input:checked + label {
             text-decoration: line-through;
             color: #6b7280;
@@ -42,6 +65,62 @@
             transform: translate(-50%, -50%);
             font-size: 14px;
         }
+        
+        /* Enhanced mobile checkbox styling */
+        .task-item {
+            touch-action: manipulation;
+        }
+        
+        .task-item label {
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            cursor: pointer;
+        }
+        
+        .task-checkbox {
+            min-width: 24px;
+            min-height: 24px;
+            flex-shrink: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .task-checkbox {
+                min-width: 28px;
+                min-height: 28px;
+            }
+            
+            .task-item label {
+                min-height: 52px;
+                padding: 12px 0;
+            }
+        }
+        
+        .task-item.completed {
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+        
+        .task-item.completing {
+            opacity: 0.7;
+            transform: scale(0.98);
+            transition: all 0.2s ease;
+        }
+        
+        .task-item {
+            transition: all 0.2s ease;
+        }
+        .task-item input:disabled + label {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .task-item input:disabled + label .task-checkbox {
+            border-color: #d1d5db;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
         .accordion-content {
             max-height: 0;
             overflow: hidden;
@@ -50,12 +129,32 @@
         .accordion-content.open {
             max-height: 1000px;
         }
+        
+        /* Enhanced calendar mobile responsiveness */
         .calendar-day {
             transition: all 0.2s ease;
+            min-height: 40px;
+            touch-action: manipulation;
         }
+        
+        @media (max-width: 768px) {
+            .calendar-day {
+                min-height: 48px;
+                font-size: 14px;
+            }
+        }
+        
         .calendar-day:hover {
             transform: scale(1.05);
         }
+        
+        /* Disable hover effects on touch devices */
+        @media (hover: none) {
+            .calendar-day:hover {
+                transform: none;
+            }
+        }
+        
         .calendar-day.has-workout {
             background-color: #0891b2;
             color: white;
@@ -64,6 +163,8 @@
             background-color: #22c55e;
             color: white;
         }
+        
+        /* Enhanced modal mobile responsiveness */
         .modal {
             display: none;
             position: fixed;
@@ -73,10 +174,35 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0,0,0,0.5);
+            padding: 16px;
         }
         .modal.show {
             display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        
+        @media (max-width: 768px) {
+            .modal {
+                padding: 8px;
+            }
+        }
+        
+        /* Enhanced button touch targets */
+        .tab-button {
+            min-height: 48px;
+            touch-action: manipulation;
+        }
+        
+        @media (max-width: 768px) {
+            .tab-button {
+                min-height: 52px;
+                padding: 12px 16px !important;
+                font-size: 14px;
+            }
+        }
+        
+        /* Loading spinner enhancements */
         .loading {
             display: inline-block;
             width: 20px;
@@ -86,9 +212,179 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+        
+        .loading.large {
+            width: 32px;
+            height: 32px;
+            border-width: 4px;
+        }
+        
+        .loading.small {
+            width: 16px;
+            height: 16px;
+            border-width: 2px;
+        }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        /* Enhanced form inputs for mobile */
+        input[type="text"], 
+        input[type="email"], 
+        input[type="password"] {
+            min-height: 48px;
+            font-size: 16px; /* Prevents zoom on iOS */
+        }
+        
+        @media (max-width: 768px) {
+            input[type="text"], 
+            input[type="email"], 
+            input[type="password"] {
+                min-height: 52px;
+            }
+        }
+        
+        /* Enhanced button styling for mobile */
+        button {
+            touch-action: manipulation;
+            min-height: 44px;
+        }
+        
+        @media (max-width: 768px) {
+            button {
+                min-height: 48px;
+            }
+        }
+        
+        /* Loading states for buttons */
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+        
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Error message styling */
+        .error-message {
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Success message styling */
+        .success-message {
+            animation: slideInDown 0.3s ease-out;
+        }
+        
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Improved scrolling on mobile */
+        @media (max-width: 768px) {
+            body {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .overflow-y-auto {
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+        
+        /* Error message animations */
+        .error-message {
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        .success-message {
+            animation: slideInRight 0.3s ease-out, pulse 0.5s ease-in-out 0.3s;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        /* Loading states */
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+        }
+        
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin: -8px 0 0 -8px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Error state styling */
+        .error-state {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+        }
+        
+        .error-text {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
         }
     </style>
 </head>
@@ -97,23 +393,23 @@
     <div id="app" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <!-- Authentication Modal -->
         <div id="auth-modal" class="modal">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-cyan-700" id="auth-title">Login</h2>
-                    <button id="close-auth-button" class="text-3xl font-light text-slate-500 hover:text-slate-800">&times;</button>
+                    <h2 class="text-xl sm:text-2xl font-bold text-cyan-700" id="auth-title">Login</h2>
+                    <button id="close-auth-button" class="text-2xl sm:text-3xl font-light text-slate-500 hover:text-slate-800 p-2">&times;</button>
                 </div>
                 <div id="auth-content">
                     <!-- Login Form -->
                     <form id="login-form" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
-                            <input type="text" id="login-username" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+                            <input type="text" id="login-username" class="w-full p-3 sm:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-base" required autocomplete="username">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                            <input type="password" id="login-password" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+                            <input type="password" id="login-password" class="w-full p-3 sm:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-base" required autocomplete="current-password">
                         </div>
-                        <button type="submit" class="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-colors">
+                        <button type="submit" id="login-submit-btn" class="w-full bg-cyan-600 text-white py-3 sm:py-4 rounded-lg hover:bg-cyan-700 transition-colors font-medium">
                             <span id="login-loading" class="loading hidden"></span>
                             <span id="login-text">Login</span>
                         </button>
@@ -123,24 +419,24 @@
                     <form id="register-form" class="space-y-4 hidden">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Username</label>
-                            <input type="text" id="register-username" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+                            <input type="text" id="register-username" class="w-full p-3 sm:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-base" required autocomplete="username">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                            <input type="email" id="register-email" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+                            <input type="email" id="register-email" class="w-full p-3 sm:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-base" required autocomplete="email">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                            <input type="password" id="register-password" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+                            <input type="password" id="register-password" class="w-full p-3 sm:p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-base" required autocomplete="new-password">
                         </div>
-                        <button type="submit" class="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-colors">
+                        <button type="submit" id="register-submit-btn" class="w-full bg-cyan-600 text-white py-3 sm:py-4 rounded-lg hover:bg-cyan-700 transition-colors font-medium">
                             <span id="register-loading" class="loading hidden"></span>
                             <span id="register-text">Register</span>
                         </button>
                     </form>
                     
                     <div class="mt-4 text-center">
-                        <button id="toggle-auth-form" class="text-cyan-600 hover:text-cyan-700 text-sm">
+                        <button id="toggle-auth-form" class="text-cyan-600 hover:text-cyan-700 text-sm p-2">
                             Don't have an account? Register
                         </button>
                     </div>
@@ -150,33 +446,35 @@
 
         <!-- Main App Content -->
         <div id="main-content" class="hidden">
-            <header class="text-center mb-8">
-                <div class="flex justify-between items-center mb-4">
-                    <h1 class="text-4xl font-bold text-cyan-700">Your Fitness Journey</h1>
-                    <div class="flex items-center space-x-4">
-                        <span id="user-info" class="text-slate-600"></span>
-                        <button id="logout-button" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">Logout</button>
+            <header class="text-center mb-6 lg:mb-8">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-4 sm:space-y-0">
+                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-cyan-700">Your Fitness Journey</h1>
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <span id="user-info" class="text-slate-600 text-sm sm:text-base"></span>
+                        <button id="logout-button" class="bg-red-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm sm:text-base">Logout</button>
                     </div>
                 </div>
-                <p class="text-lg text-slate-600">Track your progress, stay motivated, achieve your goals!</p>
+                <p class="text-base lg:text-lg text-slate-600">Track your progress, stay motivated, achieve your goals!</p>
             </header>
 
             <!-- Navigation Tabs -->
             <div class="flex justify-center mb-8">
-                <div class="bg-white rounded-lg p-1 shadow-lg">
-                    <button class="tab-button active px-6 py-3 rounded-md transition-colors" data-tab="workouts">Workouts</button>
-                    <button class="tab-button px-6 py-3 rounded-md transition-colors" data-tab="calendar">Calendar</button>
-                    <button class="tab-button px-6 py-3 rounded-md transition-colors" data-tab="progress">Progress</button>
-                    <button class="tab-button px-6 py-3 rounded-md transition-colors" data-tab="guide">Guide</button>
+                <div class="bg-white rounded-lg p-1 shadow-lg w-full max-w-2xl">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-1">
+                        <button class="tab-button active px-3 sm:px-6 py-3 rounded-md transition-colors text-sm sm:text-base" data-tab="workouts">Workouts</button>
+                        <button class="tab-button px-3 sm:px-6 py-3 rounded-md transition-colors text-sm sm:text-base" data-tab="calendar">Calendar</button>
+                        <button class="tab-button px-3 sm:px-6 py-3 rounded-md transition-colors text-sm sm:text-base" data-tab="progress">Progress</button>
+                        <button class="tab-button px-3 sm:px-6 py-3 rounded-md transition-colors text-sm sm:text-base" data-tab="guide">Guide</button>
+                    </div>
                 </div>
             </div>
 
             <!-- Workouts Tab -->
             <div id="workouts-tab" class="tab-content">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-1">
-                        <div class="bg-white p-6 rounded-2xl shadow-lg sticky top-8">
-                            <h2 class="text-2xl font-bold mb-4 text-center">Weekly Plan</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
+                    <div class="lg:col-span-1 order-2 lg:order-1">
+                        <div class="bg-white p-4 lg:p-6 rounded-2xl shadow-lg lg:sticky lg:top-8">
+                            <h2 class="text-xl lg:text-2xl font-bold mb-4 text-center">Weekly Plan</h2>
                             <div class="chart-container mb-6">
                                 <canvas id="weeklySplitChart"></canvas>
                             </div>
@@ -192,9 +490,9 @@
                         </div>
                     </div>
 
-                    <div id="workout-display" class="lg:col-span-2">
-                        <div class="bg-white p-8 rounded-2xl shadow-lg text-center">
-                            <h2 class="text-2xl font-bold text-slate-700 mb-4">Welcome to Your Fitness Journey!</h2>
+                    <div id="workout-display" class="lg:col-span-2 order-1 lg:order-2">
+                        <div class="bg-white p-4 lg:p-8 rounded-2xl shadow-lg text-center">
+                            <h2 class="text-xl lg:text-2xl font-bold text-slate-700 mb-4">Welcome to Your Fitness Journey!</h2>
                             <p class="text-slate-600 mb-6">Select a day from the sidebar to view your workout plan.</p>
                             <div class="loading mx-auto"></div>
                         </div>
@@ -204,16 +502,16 @@
 
             <!-- Calendar Tab -->
             <div id="calendar-tab" class="tab-content hidden">
-                <div class="bg-white p-6 rounded-2xl shadow-lg">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-cyan-700">Workout Calendar</h2>
+                <div class="bg-white p-4 lg:p-6 rounded-2xl shadow-lg">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
+                        <h2 class="text-xl lg:text-2xl font-bold text-cyan-700">Workout Calendar</h2>
                         <div class="flex items-center space-x-4">
-                            <button id="prev-month" class="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 transition-colors">‹</button>
-                            <span id="current-month" class="text-lg font-semibold"></span>
-                            <button id="next-month" class="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 transition-colors">›</button>
+                            <button id="prev-month" class="bg-slate-100 p-3 rounded-lg hover:bg-slate-200 transition-colors text-lg">‹</button>
+                            <span id="current-month" class="text-base lg:text-lg font-semibold min-w-[120px] text-center"></span>
+                            <button id="next-month" class="bg-slate-100 p-3 rounded-lg hover:bg-slate-200 transition-colors text-lg">›</button>
                         </div>
                     </div>
-                    <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1 lg:gap-2">
                         <!-- Calendar will be populated here -->
                     </div>
                 </div>
@@ -221,29 +519,29 @@
 
             <!-- Progress Tab -->
             <div id="progress-tab" class="tab-content hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <h2 class="text-2xl font-bold text-cyan-700 mb-4">Streak Stats</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
+                    <div class="bg-white p-4 lg:p-6 rounded-2xl shadow-lg">
+                        <h2 class="text-xl lg:text-2xl font-bold text-cyan-700 mb-4">Streak Stats</h2>
                         <div id="streak-stats" class="space-y-4">
                             <div class="text-center">
-                                <div class="text-3xl font-bold text-cyan-600">0</div>
+                                <div class="text-2xl lg:text-3xl font-bold text-cyan-600">0</div>
                                 <div class="text-sm text-slate-500">Current Streak</div>
                             </div>
                             <div class="text-center">
-                                <div class="text-3xl font-bold text-green-600">0</div>
+                                <div class="text-2xl lg:text-3xl font-bold text-green-600">0</div>
                                 <div class="text-sm text-slate-500">Longest Streak</div>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <h2 class="text-2xl font-bold text-cyan-700 mb-4">Monthly Stats</h2>
+                    <div class="bg-white p-4 lg:p-6 rounded-2xl shadow-lg">
+                        <h2 class="text-xl lg:text-2xl font-bold text-cyan-700 mb-4">Monthly Stats</h2>
                         <div id="monthly-stats" class="space-y-4">
                             <div class="text-center">
-                                <div class="text-3xl font-bold text-cyan-600">0</div>
+                                <div class="text-2xl lg:text-3xl font-bold text-cyan-600">0</div>
                                 <div class="text-sm text-slate-500">Workouts This Month</div>
                             </div>
                             <div class="text-center">
-                                <div class="text-3xl font-bold text-green-600">0%</div>
+                                <div class="text-2xl lg:text-3xl font-bold text-green-600">0%</div>
                                 <div class="text-sm text-slate-500">Completion Rate</div>
                             </div>
                         </div>
@@ -271,6 +569,177 @@
         </div>
     </div>
 
+    <script>
+        // Map workouts to weekdays
+        const workoutData = {
+            mon: {
+                title: "Full Body Strength A",
+                focus: "Strength Training",
+                warmup: [
+                    "5 minutes of light cardio (jogging, cycling)",
+                    "Arm circles (10 forward, 10 backward)",
+                    "Leg swings (10 per leg, each direction)",
+                    "Torso twists (10 per side)",
+                    "Bodyweight squats (15 reps)"
+                ],
+                workout: [
+                    "Goblet Squats: 3 sets of 8-12 reps",
+                    "Dumbbell Bench Press: 3 sets of 8-12 reps",
+                    "Dumbbell Rows: 3 sets of 8-12 reps per arm",
+                    "Overhead Press (Dumbbell): 3 sets of 8-12 reps",
+                    "Lunges: 3 sets of 10-12 reps per leg",
+                    "Plank: 3 sets, hold for 30-60 seconds"
+                ],
+                cooldown: [
+                    "Quad stretch (30s per leg)",
+                    "Hamstring stretch (30s per leg)",
+                    "Chest stretch (30s)",
+                    "Back stretch (Cat-Cow) (30s)",
+                    "Triceps stretch (30s per arm)"
+                ]
+            },
+            tue: {
+                title: "Cardio & Core",
+                focus: "Cardiovascular Health & Core Strength",
+                warmup: ["5 minutes of brisk walking or light jogging."],
+                workout: [
+                    "Steady-State Cardio (20-30 mins on treadmill, bike, or elliptical)",
+                    "Crunches: 3 sets of 15-20 reps",
+                    "Bird-Dog: 3 sets of 10 reps per side",
+                    "Glute Bridges: 3 sets of 15-20 reps"
+                ],
+                cooldown: [
+                    "Slow walking (3 mins)",
+                    "Cobra stretch (30s)",
+                    "Child's pose (60s)"
+                ]
+            },
+            wed: {
+                title: "Full Body Strength B",
+                focus: "Strength Training",
+                warmup: [
+                    "5 minutes of light cardio (jogging, cycling)",
+                    "Arm circles (10 forward, 10 backward)",
+                    "Leg swings (10 per leg, each direction)",
+                    "Torso twists (10 per side)",
+                    "Bodyweight squats (15 reps)"
+                ],
+                workout: [
+                    "Romanian Deadlifts (Dumbbell): 3 sets of 10-15 reps",
+                    "Push-Ups (on knees if needed): 3 sets to failure",
+                    "Lat Pulldowns or Dumbbell Pullovers: 3 sets of 8-12 reps",
+                    "Dumbbell Bicep Curls: 3 sets of 10-15 reps per arm",
+                    "Tricep Dips (using a bench): 3 sets to failure",
+                    "Leg Raises: 3 sets of 15-20 reps"
+                ],
+                cooldown: [
+                    "Quad stretch (30s per leg)",
+                    "Hamstring stretch (30s per leg)",
+                    "Chest stretch (30s)",
+                    "Back stretch (Cat-Cow) (30s)",
+                    "Triceps stretch (30s per arm)"
+                ]
+            },
+            thu: {
+                title: "Active Recovery",
+                focus: "Rest & Mobility",
+                warmup: [],
+                workout: [
+                    "Go for a 20-30 minute walk",
+                    "Do some light stretching or foam rolling",
+                    "Consider gentle yoga or mobility work"
+                ],
+                cooldown: []
+            },
+            fri: {
+                title: "Full Body Strength A",
+                focus: "Strength Training",
+                warmup: [
+                    "5 minutes of light cardio (jogging, cycling)",
+                    "Arm circles (10 forward, 10 backward)",
+                    "Leg swings (10 per leg, each direction)",
+                    "Torso twists (10 per side)",
+                    "Bodyweight squats (15 reps)"
+                ],
+                workout: [
+                    "Goblet Squats: 3 sets of 8-12 reps",
+                    "Dumbbell Bench Press: 3 sets of 8-12 reps",
+                    "Dumbbell Rows: 3 sets of 8-12 reps per arm",
+                    "Overhead Press (Dumbbell): 3 sets of 8-12 reps",
+                    "Lunges: 3 sets of 10-12 reps per leg",
+                    "Plank: 3 sets, hold for 30-60 seconds"
+                ],
+                cooldown: [
+                    "Quad stretch (30s per leg)",
+                    "Hamstring stretch (30s per leg)",
+                    "Chest stretch (30s)",
+                    "Back stretch (Cat-Cow) (30s)",
+                    "Triceps stretch (30s per arm)"
+                ]
+            },
+            sat: {
+                title: "Cardio & Core",
+                focus: "Cardiovascular Health & Core Strength",
+                warmup: ["5 minutes of brisk walking or light jogging."],
+                workout: [
+                    "Steady-State Cardio (20-30 mins on treadmill, bike, or elliptical)",
+                    "Crunches: 3 sets of 15-20 reps",
+                    "Bird-Dog: 3 sets of 10 reps per side",
+                    "Glute Bridges: 3 sets of 15-20 reps"
+                ],
+                cooldown: [
+                    "Slow walking (3 mins)",
+                    "Cobra stretch (30s)",
+                    "Child's pose (60s)"
+                ]
+            },
+            sun: {
+                title: "Rest Day",
+                focus: "Full Recovery",
+                warmup: [],
+                workout: [
+                    "Complete rest is essential for muscle repair and growth.",
+                    "Ensure you get quality sleep.",
+                    "Focus on good nutrition and hydration."
+                ],
+                cooldown: []
+            }
+        };
+
+        const weekdayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        const weekdayKeys = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dayNavigation = document.getElementById('day-navigation');
+            const workoutDisplay = document.getElementById('workout-display');
+            const guideButton = document.getElementById('guide-button');
+            const guideModal = document.getElementById('guide-modal');
+            const closeGuideButton = document.getElementById('close-guide-button');
+            const guideContent = document.getElementById('guide-content');
+
+            // Render navigation for Mon-Sun
+            weekdayKeys.forEach((key, index) => {
+                const dayData = workoutData[key];
+                const navButton = document.createElement('button');
+                navButton.className = 'nav-item w-full text-left p-4 rounded-lg hover:bg-cyan-600 hover:text-white transition-colors duration-200';
+                navButton.dataset.day = key;
+                navButton.innerHTML = `
+                    <p class="font-semibold">${weekdayNames[index]}: ${dayData.title}</p>
+                    <p class="text-sm opacity-80">${dayData.focus}</p>
+                `;
+                dayNavigation.appendChild(navButton);
+            });
+
+            // Set default selected day to today (Mon=0, Sun=6)
+            const today = new Date().getDay();
+            // JS: 0=Sun, 1=Mon, ..., 6=Sat. We want Mon=0, ..., Sun=6
+            const weekdayIndex = today === 0 ? 6 : today - 1;
+            const currentDayKey = weekdayKeys[weekdayIndex];
+            document.querySelector(`.nav-item[data-day="${currentDayKey}"]`).click();
+
+            // ... existing code ...
+        });
+    </script>
     <script src="js/app.js"></script>
 </body>
 </html> 

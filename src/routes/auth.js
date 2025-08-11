@@ -1,147 +1,87 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { authenticateToken, generateToken } = require('../middleware/auth');
+const { 
+    asyncHandler, 
+    AuthenticationError, 
+    ConflictError,
+    ValidationError 
+} = require('../middleware/errorHandler');
+const { validate, userSchemas } = require('../middleware/validation');
 
 const router = express.Router();
 
-// Validation middleware
-const validateRegistration = [
-  body('username')
-    .isLength({ min: 3, max: 30 })
-    .withMessage('Username must be between 3 and 30 characters')
-    .matches(/^[a-zA-Z0-9_]+$/)
-    .withMessage('Username can only contain letters, numbers, and underscores'),
-  body('email')
-    .isEmail()
-    .withMessage('Please provide a valid email address'),
-  body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long')
-];
-
-const validateLogin = [
-  body('username')
-    .notEmpty()
-    .withMessage('Username is required'),
-  body('password')
-    .notEmpty()
-    .withMessage('Password is required')
-];
-
 // Register new user
-router.post('/register', validateRegistration, async (req, res) => {
-  try {
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Validation Error',
-        details: errors.array()
-      });
-    }
+router.post('/register', 
+    validate(userSchemas.register),
+    asyncHandler(async (req, res) => {
+        const { username, email, password } = req.body;
 
-    const { username, email, password } = req.body;
+        // Check if user already exists
+        const existingUser = await User.findByUsername(username);
+        if (existingUser) {
+            throw new ConflictError('Username already exists');
+        }
 
-    // Check if user already exists
-    const existingUser = await User.findByUsername(username);
-    if (existingUser) {
-      return res.status(409).json({
-        error: 'Username already exists'
-      });
-    }
+        // Create new user
+        const user = await User.create({
+            username,
+            email,
+            password
+        });
 
-    // Create new user
-    const user = await User.create({
-      username,
-      email,
-      password
-    });
+        // Remove password from response
+        const { password: _, ...userWithoutPassword } = user;
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
-
-    res.status(201).json({
-      message: 'User registered successfully',
-      user: userWithoutPassword
-    });
-  } catch (error) {
-    if (error.message.includes('already exists')) {
-      return res.status(409).json({
-        error: error.message
-      });
-    }
-    
-    console.error('Registration error:', error);
-    res.status(500).json({
-      error: 'Internal server error'
-    });
-  }
-});
+        res.status(201).json({
+            message: 'User registered successfully',
+            user: userWithoutPassword
+        });
+    })
+);
 
 // Login user
-router.post('/login', validateLogin, async (req, res) => {
-  try {
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Validation Error',
-        details: errors.array()
-      });
-    }
+router.post('/login', 
+    validate(userSchemas.login),
+    asyncHandler(async (req, res) => {
+        const { username, password } = req.body;
 
-    const { username, password } = req.body;
+        // Find user by username
+        const user = await User.findByUsername(username);
+        if (!user) {
+            throw new AuthenticationError('Invalid credentials');
+        }
 
-    // Find user by username
-    const user = await User.findByUsername(username);
-    if (!user) {
-      return res.status(401).json({
-        error: 'Invalid credentials'
-      });
-    }
+        // Validate password
+        const isValidPassword = await User.validatePassword(password, user.password);
+        if (!isValidPassword) {
+            throw new AuthenticationError('Invalid credentials');
+        }
 
-    // Validate password
-    const isValidPassword = await User.validatePassword(password, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({
-        error: 'Invalid credentials'
-      });
-    }
+        // Generate JWT token
+        const token = generateToken(user.id);
 
-    // Generate JWT token
-    const token = generateToken(user.id);
+        // Remove password from response
+        const { password: _, ...userWithoutPassword } = user;
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
-
-    res.json({
-      message: 'Login successful',
-      token,
-      user: userWithoutPassword
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      error: 'Internal server error'
-    });
-  }
-});
+        res.json({
+            message: 'Login successful',
+            token,
+            user: userWithoutPassword
+        });
+    })
+);
 
 // Get current user profile
-router.get('/me', authenticateToken, async (req, res) => {
-  try {
-    const { password: _, ...userWithoutPassword } = req.user;
-    
-    res.json({
-      user: userWithoutPassword
-    });
-  } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({
-      error: 'Internal server error'
-    });
-  }
-});
+router.get('/me', 
+    authenticateToken, 
+    asyncHandler(async (req, res) => {
+        const { password: _, ...userWithoutPassword } = req.user;
+        
+        res.json({
+            user: userWithoutPassword
+        });
+    })
+);
 
 module.exports = router; 

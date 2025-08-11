@@ -83,6 +83,11 @@ class Workout {
   }
 
   static async markCompleted(id) {
+    // Validate input
+    if (!id || !Number.isInteger(Number(id)) || Number(id) <= 0) {
+      throw new Error('Invalid workout ID provided');
+    }
+
     return new Promise((resolve, reject) => {
       const query = `
         UPDATE workouts 
@@ -106,6 +111,11 @@ class Workout {
   }
 
   static async markIncomplete(id) {
+    // Validate input
+    if (!id || !Number.isInteger(Number(id)) || Number(id) <= 0) {
+      throw new Error('Invalid workout ID provided');
+    }
+
     return new Promise((resolve, reject) => {
       const query = `
         UPDATE workouts 
@@ -130,26 +140,40 @@ class Workout {
 
   static async getWeeklyProgress(userId) {
     return new Promise((resolve, reject) => {
+      // Get progress based on exercises completed for all workouts in the current week
       const query = `
         SELECT 
-          COUNT(*) as total,
-          SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed
-        FROM workouts 
-        WHERE user_id = ?
+          COUNT(e.id) as total_exercises,
+          SUM(CASE WHEN e.completed = 1 THEN 1 ELSE 0 END) as completed_exercises,
+          COUNT(DISTINCT w.id) as total_workouts,
+          COUNT(DISTINCT CASE WHEN w.completed = 1 THEN w.id END) as completed_workouts
+        FROM workouts w
+        LEFT JOIN exercises e ON w.id = e.workout_id
+        WHERE w.user_id = ?
       `;
       
       db.get(query, [userId], (err, row) => {
         if (err) {
           reject(err);
         } else {
-          const total = row.total || 0;
-          const completed = row.completed || 0;
-          const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+          const totalExercises = row.total_exercises || 0;
+          const completedExercises = row.completed_exercises || 0;
+          const totalWorkouts = row.total_workouts || 0;
+          const completedWorkouts = row.completed_workouts || 0;
+          
+          // Calculate percentage based on workouts completed (for backward compatibility)
+          const workoutPercentage = totalWorkouts > 0 ? Math.round((completedWorkouts / totalWorkouts) * 100) : 0;
+          const exercisePercentage = totalExercises > 0 ? Math.round((completedExercises / totalExercises) * 100) : 0;
           
           resolve({
-            total,
-            completed,
-            percentage
+            // Backward compatibility - return workout counts as main values
+            total: totalWorkouts,
+            completed: completedWorkouts,
+            percentage: workoutPercentage,
+            // Additional exercise progress data
+            totalExercises,
+            completedExercises,
+            exercisePercentage
           });
         }
       });
