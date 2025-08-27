@@ -5,6 +5,33 @@ async function seed() {
     console.log('🌱 Starting database seeding...');
     
     try {
+        // Helper to get a user
+        const getUserAsync = (email) => {
+            return new Promise((resolve, reject) => {
+                db.get('SELECT id FROM users WHERE email = ?', [email], (err, row) => {
+                    if (err) reject(err);
+                    resolve(row);
+                });
+            });
+        };
+
+        // Clear existing data for idempotency
+        const existingUser = await getUserAsync('test@example.com');
+        if (existingUser) {
+            // First, delete exercises associated with the user's workouts
+            await db.runAsync(`
+                DELETE FROM exercises 
+                WHERE workout_id IN (SELECT id FROM workouts WHERE user_id = ?)
+            `, [existingUser.id]);
+            
+            // Then, delete the workouts
+            await db.runAsync('DELETE FROM workouts WHERE user_id = ?', [existingUser.id]);
+            
+            // Finally, delete the user
+            await db.runAsync('DELETE FROM users WHERE id = ?', [existingUser.id]);
+            console.log('🧹 Cleaned up existing test user and associated data.');
+        }
+
         // Create a test user
         const hashedPassword = await bcrypt.hash('password123', 10);
         const userResult = await db.runAsync(`
